@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ListDrop — Bid anywhere. No redirect.</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #080808;
+  --white: #f4f0e8;
+  --cream: #f0ead8;
+  --accent: #ff4d1c;
+  --yellow: #ffd600;
+  --green: #00e676;
+  --blue: #3665f3;
+  --gray: #141414;
+  --gray2: #1c1c1c;
+  --muted: #555;
+  --border: rgba(244,240,232,0.08);
+  --border2: rgba(244,240,232,0.14);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 56px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(8,8,8,0.9);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--accent); }
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nav-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nav-pill:hover { background: var(--accent); border-color: var(--accent); }
+
+/* ── HERO ── */
+.hero {
+  padding: 120px 56px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(52px, 7vw, 96px);
+  font-weight: 800;
+  letter-spacing: -3px;
+  line-height: 0.95;
+  margin-bottom: 32px;
+  max-width: 900px;
+}
+
+.hero-title .line2 { color: var(--accent); }
+
+.hero-sub {
+  font-size: 18px;
+  color: rgba(244,240,232,0.55);
+  max-width: 520px;
+  line-height: 1.6;
+  margin-bottom: 48px;
+  font-weight: 300;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 80px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,77,28,0.4); }
+
+.btn-ghost {
+  background: transparent;
+  color: rgba(244,240,232,0.6);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--white); color: var(--white); }
+
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+}
+
+.hero-stat-val {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+
+.hero-stat-val.a { color: var(--accent); }
+.hero-stat-val.y { color: var(--yellow); }
+.hero-stat-val.g { color: var(--green); }
+
+.hero-stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── FLOATING WIDGET (hero right) ── */
+.hero-layout {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 48px;
+  align-items: start;
+}
+
+.hero-widget-area {
+  position: relative;
+  padding-top: 20px;
+}
+
+/* ── SECTION ── */
+.section {
+  padding: 96px 56px;
+  border-top: 1px solid var(--border);
+}
+
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+
+.section-sub {
+  color: rgba(244,240,232,0.45);
+  font-size: 15px;
+  max-width: 560px;
+  margin-bottom: 56px;
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+/* ── HOW IT WORKS ── */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.step {
+  background: var(--gray);
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  cursor: default;
+}
+.step:first-child { border-radius: 16px 0 0 16px; }
+.step:last-child { border-radius: 0 16px 16px 0; }
+.step:hover { background: var(--gray2); }
+
+.step::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.step:nth-child(1)::after { background: var(--accent); }
+.step:nth-child(2)::after { background: var(--yellow); }
+.step:nth-child(3)::after { background: var(--green); }
+.step:nth-child(4)::after { background: var(--blue); }
+.step:hover::after { opacity: 1; }
+
+.step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 24px;
+}
+
+.step-icon { font-size: 28px; margin-bottom: 14px; }
+
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+/* ── LIVE DEMO SECTION ── */
+.demo-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 48px;
+  align-items: start;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.cat-tab {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cat-tab:hover { border-color: var(--white); color: var(--white); }
+.cat-tab.active { background: var(--white); color: var(--black); border-color: var(--white); }
+
+.listings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listing-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--gray);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.listing-item:first-child { border-radius: 12px 12px 4px 4px; }
+.listing-item:last-child { border-radius: 4px 4px 12px 12px; }
+.listing-item:hover { background: var(--gray2); border-color: var(--border2); }
+.listing-item.active { background: var(--gray2); border-color: rgba(255,77,28,0.3); }
+
+.listing-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  background: var(--black);
+}
+
+.listing-info { flex: 1; min-width: 0; }
+
+.listing-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.listing-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+}
+
+.listing-right { text-align: right; flex-shrink: 0; }
+
+.listing-price {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.listing-bids {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* ── INTERACTIVE WIDGET ── */
+.widget-wrap {
+  position: sticky;
+  top: 96px;
+}
+
+.widget-context {
+  background: #0f1117;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border2);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.widget-context-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wdot { width: 10px; height: 10px; border-radius: 50%; }
+.wdot.r { background: #ff5f57; }
+.wdot.y { background: #febc2e; }
+.wdot.g { background: #28c840; }
+
+.widget-context-url {
+  flex: 1;
+  margin: 0 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
+
+.host-page {
+  padding: 20px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.25);
+  font-style: italic;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.host-page strong { color: rgba(255,255,255,0.5); font-style: normal; }
+
+/* THE ACTUAL WIDGET */
+.the-widget {
+  background: white;
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.w-header {
+  background: #080808;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.w-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+}
+.w-logo span { color: var(--accent); }
+
+.w-powered {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #444;
+}
+
+.w-img {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  position: relative;
+  transition: background 0.4s;
+}
+
+.w-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #080808;
+  color: white;
+  font-size: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.w-body { padding: 14px 16px; }
+
+.w-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+
+.w-seller {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.w-price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.w-price {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #111;
+  transition: all 0.3s;
+}
+
+.w-bids {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #999;
+}
+
+.w-timer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+.w-input-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.w-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  color: #111;
+  outline: none;
+  transition: border 0.2s;
+  background: white;
+}
+.w-input:focus { border-color: var(--accent); }
+
+.w-bid-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.w-bid-btn:hover { background: #e03010; transform: scale(1.03); }
+.w-bid-btn:active { transform: scale(0.98); }
+
+.w-note {
+  font-size: 9px;
+  color: #bbb;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+}
+
+/* Widget states */
+.w-state { display: none; }
+.w-state.active { display: block; }
+
+.w-auth {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.w-auth-icon { font-size: 24px; margin-bottom: 8px; }
+.w-auth-title { font-size: 12px; font-weight: 700; color: #111; margin-bottom: 4px; }
+.w-auth-sub { font-size: 10px; color: #888; margin-bottom: 12px; line-height: 1.4; }
+
+.w-ebay-btn {
+  width: 100%;
+  background: #3665f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.w-ebay-btn:hover { background: #2554e0; }
+
+.w-success { text-align: center; padding: 4px 0; }
+.w-success-icon { font-size: 28px; margin-bottom: 6px; }
+.w-success-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 4px; }
+.w-success-sub { font-size: 10px; color: #888; line-height: 1.4; margin-bottom: 12px; }
+
+.w-view-btn {
+  width: 100%;
+  background: #080808;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.w-view-btn:hover { background: #222; }
+
+/* ── TICKER ── */
+.bid-ticker {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  margin-top: 2px;
+  position: relative;
+  height: 28px;
+}
+
+.bid-ticker::before, .bid-ticker::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 40px;
+  z-index: 2;
+}
+.bid-ticker::before { left: 0; background: linear-gradient(to right, #0f1117, transparent); }
+.bid-ticker::after { right: 0; background: linear-gradient(to left, #0f1117, transparent); }
+
+.ticker-track {
+  display: flex;
+  gap: 10px;
+  animation: ticker 24s linear infinite;
+  white-space: nowrap;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.ticker-item .t-val { color: var(--green); }
+.ticker-item .t-cat { color: rgba(244,240,232,0.3); }
+
+/* ── EMBED SECTION ── */
+.embed-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.embed-card {
+  background: var(--gray);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.embed-card:hover { border-color: var(--border2); transform: translateY(-4px); }
+
+.embed-card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.embed-platform-icon { font-size: 16px; }
+
+.embed-card-body { padding: 24px; }
+
+.embed-code {
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #7dd3fc;
+  line-height: 1.7;
+  margin-top: 16px;
+}
+.ec-tag { color: #f9a8d4; }
+.ec-attr { color: #86efac; }
+.ec-val { color: #fde68a; }
+.ec-comment { color: #555; }
+
+.embed-desc {
+  font-size: 13px;
+  color: rgba(244,240,232,0.5);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.embed-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* ── ANALYTICS ── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.anal-card {
+  background: var(--gray);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+}
+
+.anal-val {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.anal-val.g { color: var(--green); }
+.anal-val.a { color: var(--accent); }
+.anal-val.y { color: var(--yellow); }
+.anal-val.b { color: var(--blue); }
+
+.anal-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.source-icon { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+
+.source-name {
+  font-size: 11px;
+  color: rgba(244,240,232,0.6);
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.source-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.source-bar {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+}
+
+.source-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  width: 32px;
+  text-align: right;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 48px 56px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+.footer-logo span { color: var(--accent); }
+
+.footer-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.6s ease forwards;
+  opacity: 0;
+}
+
+.fade-up-1 { animation-delay: 0.1s; }
+.fade-up-2 { animation-delay: 0.22s; }
+.fade-up-3 { animation-delay: 0.34s; }
+.fade-up-4 { animation-delay: 0.46s; }
+
+/* Price flash */
+@keyframes priceFlash {
+  0% { color: #111; }
+  30% { color: var(--green); }
+  100% { color: #111; }
+}
+.price-flash { animation: priceFlash 0.8s ease; }
+
+/* Bid counter pulse */
+@keyframes bidPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.bid-context-strip {
+  background: rgba(0,230,118,0.06);
+  border: 1px solid rgba(0,230,118,0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">List<span>Drop</span></div>
+  <div class="nav-right">
+    <span class="nav-tag">Embed · Bid · Close</span>
+    <button class="nav-pill">Get early access →</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-layout">
+    <div>
+      <div class="hero-eyebrow fade-up fade-up-1">Embeddable auction widget</div>
+      <h1 class="hero-title fade-up fade-up-2">
+        Bid anywhere.<br>
+        <span class="line2">No redirect.</span>
+      </h1>
+      <p class="hero-sub fade-up fade-up-3">
+        Drop a ListDrop widget on any page — blog, newsletter, social profile — and let buyers bid on your eBay listing without ever leaving. One line of code.
+      </p>
+      <div class="hero-actions fade-up fade-up-4">
+        <button class="btn-primary">Start for free →</button>
+        <button class="btn-ghost">See how it works</button>
+      </div>
+      <div class="hero-stats fade-up fade-up-4">
+        <div>
+          <div class="hero-stat-val a">1 line</div>
+          <div class="hero-stat-label">to embed</div>
+        </div>
+        <div>
+          <div class="hero-stat-val y">3.1x</div>
+          <div class="hero-stat-label">more bids</div>
+        </div>
+        <div>
+          <div class="hero-stat-val g">$0</div>
+          <div class="hero-stat-label">to start</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STICKY WIDGET PREVIEW -->
+    <div class="hero-widget-area fade-up fade-up-3">
+      <div class="widget-context">
+        <div class="widget-context-header">
+          <div class="wdot r"></div><div class="wdot y"></div><div class="wdot g"></div>
+          <div class="widget-context-url" id="contextUrl">sneakerblog.co/jordan-1-chicago-review</div>
+        </div>
+        <div class="host-page">
+          <strong>The Jordan 1 Chicago 2015 is still the grail.</strong> Dead stock, worn once,
+          or deadstock never worn — it doesn't matter. This shoe prints money on the resale market every time.
+          I've had this pair sitting in storage for 3 years...
+        </div>
+        <div id="liveWidget">
+          <div class="the-widget">
+            <div class="w-header">
+              <div class="w-logo">List<span>Drop</span></div>
+              <div class="w-powered">via eBay</div>
+            </div>
+            <div class="w-img" id="wImg" style="background:linear-gradient(135deg,#fef3e2,#fde8cc);">
+              <span id="wEmoji">👟</span>
+              <div class="w-badge" id="wBadge">DS · Size 10</div>
+            </div>
+            <div class="w-body">
+              <div class="w-name" id="wName">Jordan 1 Retro High OG Chicago 2015</div>
+              <div class="w-seller" id="wSeller">@sneakerking · 99.8% feedback</div>
+              <div class="w-price-row">
+                <div class="w-price" id="wPrice">$380</div>
+                <div class="w-bids"><span class="live-dot"></span> <span id="wBids">12 bids</span></div>
+              </div>
+              <div class="w-timer">⏱ <span id="wTimer">4h 22m remaining</span></div>
+
+              <!-- State 1: Bid -->
+              <div class="w-state active" id="stateBid">
+                <div class="w-input-row">
+                  <input class="w-input" id="bidInput" type="text" placeholder="Your max bid" value="$400">
+                  <button class="w-bid-btn" onclick="handleBid()">Bid →</button>
+                </div>
+                <div class="w-note">eBay autobid · you only pay what you need to win</div>
+              </div>
+
+              <!-- State 2: Auth -->
+              <div class="w-state" id="stateAuth">
+                <div class="w-auth">
+                  <div class="w-auth-icon">🔐</div>
+                  <div class="w-auth-title">Connect your eBay account</div>
+                  <div class="w-auth-sub">One-time setup. Bid on any ListDrop widget without signing in again.</div>
+                  <button class="w-ebay-btn" onclick="handleAuth()">Continue with eBay →</button>
+                  <div class="w-note">We never store your password</div>
+                </div>
+              </div>
+
+              <!-- State 3: Success -->
+              <div class="w-state" id="stateSuccess">
+                <div class="w-success">
+                  <div class="w-success-icon">✅</div>
+                  <div class="w-success-title">You're the top bidder!</div>
+                  <div class="w-success-sub">Max bid $400 · eBay autobid active<br>We'll notify you if you're outbid.</div>
+                  <button class="w-view-btn">View on eBay →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bid-context-strip" id="bidStrip" style="display:none;">
+          <span class="live-dot"></span> Live bid activity on this listing
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE BID TICKER -->
+<div style="padding: 16px 0; background: var(--gray); border-top:1px solid var(--border); border-bottom:1px solid var(--border); overflow:hidden;">
+  <div class="bid-ticker">
+    <div class="ticker-track" id="tickerTrack"></div>
+    <div class="ticker-track" id="tickerTrack2"></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section">
+  <div class="section-label">01 — How it works</div>
+  <h2 class="section-title">Paste. Embed. Sell.</h2>
+  <p class="section-sub">Three steps to turn any page into a bidding surface for your eBay listings.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">🔗</div>
+      <div class="step-title">Connect eBay</div>
+      <div class="step-desc">Link your seller account once. All your active listings become embeddable instantly.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">⚙️</div>
+      <div class="step-title">Configure widget</div>
+      <div class="step-desc">Choose your listing, pick a theme, customize colors. Takes 60 seconds.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">📋</div>
+      <div class="step-title">Copy one line</div>
+      <div class="step-desc">Drop the script tag anywhere — Substack, Squarespace, your blog, a link in bio page.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-icon">📈</div>
+      <div class="step-title">Watch bids roll in</div>
+      <div class="step-desc">Buyers bid without redirects. You get real-time analytics on widget views, bids, and revenue by source.</div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE DEMO -->
+<div class="section">
+  <div class="section-label">02 — Live demo</div>
+  <h2 class="section-title">Works across categories.</h2>
+  <p class="section-sub">Sneakers, trading cards, apparel, home goods — any eBay listing becomes an embeddable widget.</p>
+
+  <div class="demo-layout">
+    <div>
+      <div class="category-tabs">
+        <div class="cat-tab active" onclick="switchCat(this,'sneakers')">👟 Sneakers</div>
+        <div class="cat-tab" onclick="switchCat(this,'cards')">🃏 Trading Cards</div>
+        <div class="cat-tab" onclick="switchCat(this,'apparel')">🧥 Apparel</div>
+        <div class="cat-tab" onclick="switchCat(this,'home')">🪔 Home</div>
+      </div>
+
+      <div class="listings-list" id="listingsList"></div>
+    </div>
+
+    <!-- WIDGET STICKY -->
+    <div class="widget-wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Live widget preview</div>
+      <div style="background:white;border-radius:14px;overflow:hidden;box-shadow:0 24px 48px rgba(0,0,0,0.5);">
+        <div class="w-header">
+          <div class="w-logo">List<span>Drop</span></div>
+          <div class="w-powered">via eBay</div>
+        </div>
+        <div class="w-img" id="demoImg" style="background:linear-gradient(135deg,#fef3e2,#fde8cc);">
+          <span id="demoEmoji" style="font-size:52px;">👟</span>
+          <div class="w-badge" id="demoBadge">DS · Size 10</div>
+        </div>
+        <div class="w-body">
+          <div class="w-name" id="demoName">Jordan 1 Retro High OG Chicago 2015</div>
+          <div class="w-seller" id="demoSeller">@sneakerking · 99.8% feedback</div>
+          <div class="w-price-row">
+            <div class="w-price" id="demoPrice">$380</div>
+            <div class="w-bids"><span class="live-dot"></span> <span id="demoBids">12 bids</span></div>
+          </div>
+          <div class="w-timer">⏱ <span id="demoTimer">4h 22m remaining</span></div>
+          <div class="w-input-row">
+            <input class="w-input" type="text" placeholder="Your max bid" value="$400" id="demoBidInput">
+            <button class="w-bid-btn" onclick="demoBidClick()">Bid →</button>
+          </div>
+          <div class="w-note">eBay autobid · you only pay what you need to win</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMBED ANYWHERE -->
+<div class="section">
+  <div class="section-label">03 — Embed anywhere</div>
+  <h2 class="section-title">Your audience, your listings.</h2>
+  <p class="section-sub">Wherever your buyers are reading, browsing, or following — ListDrop widgets live there too.</p>
+
+  <div class="embed-layout">
+    <div class="embed-card">
+      <div class="embed-card-header">
+        <span class="embed-platform-icon">✍️</span> Substack / Newsletter
+      </div>
+      <div class="embed-card-body">
+        <div class="embed-title">Your weekly drop, embedded.</div>
+        <div class="embed-desc">Readers can bid directly inside the email preview or on the web version. No leaving, no friction.</div>
+        <div class="embed-code">
+          <span class="ec-comment">&lt;!-- paste in your Substack post --&gt;</span><br>
+          <span class="ec-tag">&lt;script</span><br>
+          &nbsp;<span class="ec-attr">src</span>=<span class="ec-val">"https://listdrop.io/w.js"</span><br>
+          &nbsp;<span class="ec-attr">data-id</span>=<span class="ec-val">"ld_x9f2a1"</span><span class="ec-tag">&gt;&lt;/script&gt;</span>
+        </div>
+      </div>
+    </div>
+    <div class="embed-card">
+      <div class="embed-card-header">
+        <span class="embed-platform-icon">📸</span> Link in Bio / Social
+      </div>
+      <div class="embed-card-body">
+        <div class="embed-title">Turn your bio into a storefront.</div>
+        <div class="embed-desc">Works with Linktree, Beacons, Carrd — or your own page. Your followers bid without switching apps.</div>
+        <div class="embed-code">
+          <span class="ec-comment">&lt;!-- any HTML page --&gt;</span><br>
+          <span class="ec-tag">&lt;div</span> <span class="ec-attr">id</span>=<span class="ec-val">"listdrop-root"</span><span class="ec-tag">&gt;&lt;/div&gt;</span><br>
+          <span class="ec-tag">&lt;script</span> <span class="ec-attr">src</span>=<span class="ec-val">"https://listdrop.io/w.js"</span><span class="ec-tag">&gt;</span>
+        </div>
+      </div>
+    </div>
+    <div class="embed-card">
+      <div class="embed-card-header">
+        <span class="embed-platform-icon">📝</span> Blog / Review Site
+      </div>
+      <div class="embed-card-body">
+        <div class="embed-title">Content that closes.</div>
+        <div class="embed-desc">Write the review. Embed the listing. Buyers who trust your taste buy on the spot. Monetize your credibility.</div>
+        <div class="embed-code">
+          <span class="ec-comment">&lt;!-- WordPress, Squarespace, Ghost --&gt;</span><br>
+          <span class="ec-tag">&lt;script</span><br>
+          &nbsp;<span class="ec-attr">src</span>=<span class="ec-val">"https://listdrop.io/w.js"</span><br>
+          &nbsp;<span class="ec-attr">data-theme</span>=<span class="ec-val">"auto"</span><span class="ec-tag">&gt;&lt;/script&gt;</span>
+        </div>
+      </div>
+    </div>
+    <div class="embed-card">
+      <div class="embed-card-header">
+        <span class="embed-platform-icon">🏪</span> Seller Dashboard
+      </div>
+      <div class="embed-card-body">
+        <div class="embed-title">Everything in one place.</div>
+        <div class="embed-desc">Track widget views, bids by source, and revenue attribution across all your embeds — in real time.</div>
+        <div class="embed-code">
+          <span class="ec-comment">// analytics API</span><br>
+          <span class="ec-tag">GET</span> <span class="ec-val">/v1/widgets/:id/stats</span><br>
+          <span class="ec-attr">→</span> views, bids, revenue, sources
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section">
+  <div class="section-label">04 — Analytics</div>
+  <h2 class="section-title">Know where your bids come from.</h2>
+  <p class="section-sub">Real-time attribution across every embed, so you know which channels are actually driving revenue.</p>
+
+  <div style="background:var(--gray);border-radius:20px;border:1px solid var(--border);overflow:hidden;">
+    <div style="padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+      <div class="wdot r"></div><div class="wdot y"></div><div class="wdot g"></div>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:8px;">listdrop.io/dashboard · Widget analytics · Last 30 days</span>
+    </div>
+    <div style="padding:28px;">
+      <div class="analytics-grid">
+        <div class="anal-card">
+          <div class="anal-val y">3,847</div>
+          <div class="anal-label">Widget views</div>
+        </div>
+        <div class="anal-card">
+          <div class="anal-val a">47</div>
+          <div class="anal-label">Bids placed</div>
+        </div>
+        <div class="anal-card">
+          <div class="anal-val g">1.2%</div>
+          <div class="anal-label">Bid conversion</div>
+        </div>
+        <div class="anal-card">
+          <div class="anal-val b">$2,140</div>
+          <div class="anal-label">Revenue attributed</div>
+        </div>
+      </div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;">Bids by source</div>
+      <div class="source-row">
+        <div class="source-icon">📸</div>
+        <div class="source-name">Instagram Story</div>
+        <div class="source-bar-wrap"><div class="source-bar" style="width:0%;background:var(--accent)" data-width="72%"></div></div>
+        <div class="source-pct">72%</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">✍️</div>
+        <div class="source-name">Substack Newsletter</div>
+        <div class="source-bar-wrap"><div class="source-bar" style="width:0%;background:var(--yellow)" data-width="18%"></div></div>
+        <div class="source-pct">18%</div>
+      </div>
+      <div class="source-row">
+        <div class="source-icon">🌐</div>
+        <div class="source-name">Personal Blog</div>
+        <div class="source-bar-wrap"><div class="source-bar" style="width:0%;background:var(--green)" data-width="10%"></div></div>
+        <div class="source-pct">10%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">List<span>Drop</span></div>
+  <div class="footer-note">Built by a YC founder · Powered by eBay API · listdrop.io</div>
+</footer>
+
+<script>
+// ── DATA ──
+const CATEGORIES = {
+  sneakers: {
+    url: 'sneakerblog.co/jordan-1-chicago-review',
+    items: [
+      { emoji:'👟', bg:'linear-gradient(135deg,#fef3e2,#fde8cc)', badge:'DS · Size 10', name:'Jordan 1 Retro High OG Chicago 2015', seller:'@sneakerking · 99.8%', price:'$380', bids:12, time:'4h 22m', input:'$400' },
+      { emoji:'👟', bg:'linear-gradient(135deg,#e8f4e8,#d4ecd4)', badge:'VNDS · Size 11', name:'Nike Dunk Low Panda 2021', seller:'@kicksvault · 98.7%', price:'$145', bids:7, time:'2h 10m', input:'$160' },
+      { emoji:'👟', bg:'linear-gradient(135deg,#e8ecf8,#d4d9f0)', badge:'DS · Size 9', name:'New Balance 550 White Grey', seller:'@solecollector · 100%', price:'$110', bids:4, time:'6h 45m', input:'$125' },
+    ]
+  },
+  cards: {
+    url: 'pokecollect.net/weekly-drops',
+    items: [
+      { emoji:'🃏', bg:'linear-gradient(135deg,#fff8e1,#fff0b3)', badge:'PSA 10 · 2002', name:'Charizard Holo Legendary Collection', seller:'@grailcards · 100%', price:'$1,200', bids:18, time:'1h 08m', input:'$1,350' },
+      { emoji:'🃏', bg:'linear-gradient(135deg,#fce4ec,#f8bbd0)', badge:'BGS 9.5 · 2000', name:'Lugia Neo Genesis 1st Edition Holo', seller:'@vintagepoke · 99.4%', price:'$680', bids:9, time:'5h 33m', input:'$750' },
+      { emoji:'🃏', bg:'linear-gradient(135deg,#e8f5e9,#c8e6c9)', badge:'RAW NM · 1999', name:'Blastoise Base Set Shadowless Holo', seller:'@rawcards · 98.2%', price:'$420', bids:6, time:'3h 55m', input:'$475' },
+    ]
+  },
+  apparel: {
+    url: 'archivefashion.com/vintage-picks',
+    items: [
+      { emoji:'🧥', bg:'linear-gradient(135deg,#f3e5f5,#e1bee7)', badge:'Vintage · Size L', name:'Supreme Box Logo Hoodie FW20 Black', seller:'@supremeresell · 99.1%', price:'$420', bids:11, time:'3h 18m', input:'$460' },
+      { emoji:'👕', bg:'linear-gradient(135deg,#e3f2fd,#bbdefb)', badge:'DS · Size M', name:'BAPE 1st Camo Shark Full Zip Hoodie', seller:'@bathing_ape_real · 100%', price:'$290', bids:5, time:'7h 02m', input:'$320' },
+      { emoji:'🧢', bg:'linear-gradient(135deg,#fff3e0,#ffe0b2)', badge:'1997 · OS', name:'Vintage Tommy Hilfiger Sailing Jacket', seller:'@archivehunter · 97.8%', price:'$180', bids:8, time:'2h 44m', input:'$200' },
+    ]
+  },
+  home: {
+    url: 'midcenturyfinds.co/this-weeks-lamp',
+    items: [
+      { emoji:'🪔', bg:'linear-gradient(135deg,#fff9e6,#fff0c0)', badge:'1960s · Orig. shade', name:'Falkenbergs Belysning Brass Arc Lamp', seller:'@mcm_selects · 99.6%', price:'$340', bids:6, time:'5h 15m', input:'$375' },
+      { emoji:'🏺', bg:'linear-gradient(135deg,#e8f4f8,#c9e8f0)', badge:'1950s · No chips', name:'Roseville Pottery Magnolia Vase #14', seller:'@potteryvault · 98.9%', price:'$95', bids:3, time:'8h 50m', input:'$110' },
+      { emoji:'🛋️', bg:'linear-gradient(135deg,#f0ebe3,#e0d5c8)', badge:'Eames Era · VG', name:'Herman Miller Aluminum Group Side Chair', seller:'@erafinds · 100%', price:'$520', bids:9, time:'4h 30m', input:'$575' },
+    ]
+  }
+};
+
+let currentCat = 'sneakers';
+let activeListing = 0;
+
+function renderListings(cat) {
+  const list = document.getElementById('listingsList');
+  const items = CATEGORIES[cat].items;
+  list.innerHTML = items.map((item, i) => `
+    <div class="listing-item ${i === activeListing ? 'active' : ''}" onclick="selectListing(${i})">
+      <div class="listing-thumb" style="font-size:22px;">${item.emoji}</div>
+      <div class="listing-info">
+        <div class="listing-name">${item.name}</div>
+        <div class="listing-meta">
+          <span>${item.seller.split('·')[0].trim()}</span>
+          <span>⏱ ${item.time}</span>
+        </div>
+      </div>
+      <div class="listing-right">
+        <div class="listing-price">${item.price}</div>
+        <div class="listing-bids">${item.bids} bids</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateDemoWidget(item) {
+  document.getElementById('demoImg').style.background = item.bg;
+  document.getElementById('demoEmoji').textContent = item.emoji;
+  document.getElementById('demoBadge').textContent = item.badge;
+  document.getElementById('demoName').textContent = item.name;
+  document.getElementById('demoSeller').textContent = item.seller;
+  document.getElementById('demoPrice').textContent = item.price;
+  document.getElementById('demoBids').textContent = item.bids + ' bids';
+  document.getElementById('demoTimer').textContent = item.time + ' remaining';
+  document.getElementById('demoBidInput').value = item.input;
+  document.getElementById('contextUrl').textContent = CATEGORIES[currentCat].url;
+}
+
+function selectListing(i) {
+  activeListing = i;
+  renderListings(currentCat);
+  const item = CATEGORIES[currentCat].items[i];
+  updateDemoWidget(item);
+}
+
+function switchCat(el, cat) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentCat = cat;
+  activeListing = 0;
+  renderListings(cat);
+  updateDemoWidget(CATEGORIES[cat].items[0]);
+}
+
+// ── HERO WIDGET INTERACTION ──
+let widgetState = 0; // 0=bid, 1=auth, 2=success
+
+function showState(state) {
+  document.getElementById('stateBid').classList.remove('active');
+  document.getElementById('stateAuth').classList.remove('active');
+  document.getElementById('stateSuccess').classList.remove('active');
+  if (state === 0) document.getElementById('stateBid').classList.add('active');
+  if (state === 1) document.getElementById('stateAuth').classList.add('active');
+  if (state === 2) document.getElementById('stateSuccess').classList.add('active');
+}
+
+function handleBid() {
+  widgetState = 1;
+  showState(1);
+}
+
+function handleAuth() {
+  widgetState = 2;
+  showState(2);
+  const priceEl = document.getElementById('wPrice');
+  priceEl.textContent = '$400';
+  priceEl.classList.add('price-flash');
+  setTimeout(() => priceEl.classList.remove('price-flash'), 800);
+  const bidsEl = document.getElementById('wBids');
+  bidsEl.textContent = '13 bids';
+  bidsEl.style.animation = 'bidPulse 0.5s ease';
+  document.getElementById('bidStrip').style.display = 'flex';
+  setTimeout(() => bidsEl.style.animation = '', 500);
+}
+
+// Demo widget bid click (just flashes)
+function demoBidClick() {
+  const btn = document.querySelector('.demo-layout .w-bid-btn');
+  const priceEl = document.getElementById('demoPrice');
+  btn.textContent = '✓ Bid placed!';
+  btn.style.background = '#00c853';
+  priceEl.classList.add('price-flash');
+  setTimeout(() => {
+    btn.textContent = 'Bid →';
+    btn.style.background = '';
+    priceEl.classList.remove('price-flash');
+  }, 1800);
+}
+
+// ── TICKER ──
+const tickerEvents = [
+  { emoji:'👟', name:'Jordan 1 Chicago', val:'+$20', cat:'Sneakers' },
+  { emoji:'🃏', name:'Charizard PSA 10', val:'+$150', cat:'Cards' },
+  { emoji:'🪔', name:'Brass Arc Lamp', val:'+$35', cat:'Home' },
+  { emoji:'🧥', name:'Supreme Box Logo', val:'+$40', cat:'Apparel' },
+  { emoji:'👟', name:'Dunk Low Panda', val:'+$15', cat:'Sneakers' },
+  { emoji:'🏺', name:'Roseville Vase', val:'+$12', cat:'Home' },
+  { emoji:'🃏', name:'Lugia 1st Ed.', val:'+$70', cat:'Cards' },
+  { emoji:'👕', name:'BAPE Full Zip', val:'+$30', cat:'Apparel' },
+  { emoji:'👟', name:'NB 550 White', val:'+$10', cat:'Sneakers' },
+  { emoji:'🛋️', name:'Eames Side Chair', val:'+$55', cat:'Home' },
+];
+
+function buildTicker(el) {
+  el.innerHTML = [...tickerEvents, ...tickerEvents].map(e =>
+    `<div class="ticker-item"><span>${e.emoji}</span><span style="color:rgba(244,240,232,0.5)">${e.name}</span><span class="t-val">${e.val}</span><span class="t-cat">${e.cat}</span><span style="color:var(--border2)">·</span></div>`
+  ).join('');
+}
+
+buildTicker(document.getElementById('tickerTrack'));
+buildTicker(document.getElementById('tickerTrack2'));
+
+// ── ANIMATE BARS ON SCROLL ──
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.source-bar[data-width]').forEach(bar => {
+        setTimeout(() => { bar.style.width = bar.dataset.width; }, 200);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('.source-bar').forEach(b => observer.observe(b));
+
+// ── LIVE TIMER COUNTDOWN ──
+let seconds = 4*3600 + 22*60;
+setInterval(() => {
+  seconds = Math.max(0, seconds - 1);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  const fmt = h > 0 ? `${h}h ${m}m remaining` : `${m}m ${s}s remaining`;
+  document.getElementById('wTimer').textContent = fmt;
+}, 1000);
+
+// ── INIT ──
+renderListings('sneakers');
+updateDemoWidget(CATEGORIES.sneakers.items[0]);
+</script>
+</body>
+</html>
